@@ -15,3 +15,5 @@ services:
         value: /tmp/hf-cache
       - key: PYTHONUNBUFFERED
         value: "1"
+      - key: ENABLE_LOCAL_MODELS
+        value: "false"

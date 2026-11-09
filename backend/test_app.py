@@ -29,6 +29,7 @@ def test_health_exposes_readiness_state():
     assert response.json() == {
         "status": "starting", "demo_only": True,
         "models_ready": False, "index_ready": False,
+        "model_mode": "starting", "rss_mb": response.json()["rss_mb"],
         "startup_error": "TestError",
     }
 
@@ -54,3 +55,9 @@ def test_ask_contract_with_mocked_ready_rag():
     response = ask(Question(question="What does the demo say?"))
     assert response["answer"] == "A cited demo answer"
     assert response["sources"][0]["page"] == 1
+
+
+def test_lightweight_embedder_is_deterministic():
+    from backend.app import HashEmbedder
+    embedder = HashEmbedder()
+    assert embedder.encode(["draft pressure"])[0] == embedder.encode(["draft pressure"])[0]

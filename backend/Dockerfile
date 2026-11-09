@@ -4,6 +4,6 @@ COPY backend/requirements.txt /app/backend/requirements.txt
 RUN pip install --no-cache-dir -r /app/backend/requirements.txt
 COPY Task2 /app/Task2
 COPY backend /app/backend
-ENV PYTHONPATH=/app HF_HOME=/tmp/hf-cache CHROMA_DIR=/tmp/chroma_public_demo
+ENV PYTHONPATH=/app HF_HOME=/tmp/hf-cache CHROMA_DIR=/tmp/chroma_public_demo ENABLE_LOCAL_MODELS=false
 EXPOSE 7860
 CMD ["sh", "-c", "uvicorn backend.app:app --host 0.0.0.0 --port ${PORT:-7860}"]
