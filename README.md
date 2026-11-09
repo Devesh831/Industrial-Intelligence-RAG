@@ -56,7 +56,7 @@ The assistant demonstrates natural-language technical questions, retrieved answe
 
 ### 4. System Architecture & Retrieval Pipeline
 
-This section shows the retrieval workflow from PDF pages to word chunks, MiniLM embeddings, Chroma search, FLAN-T5 answer generation and cited snippets. It is a conceptual view of the full local prototype and its evidence path.
+This section shows the retrieval workflow from PDF pages to word chunks, isolated HashEmbedder or MiniLM indexes, Chroma search, extractive evidence selection and cited snippets. The standalone CLI's optional FLAN-T5 path is local-only and is not used by the current API or public deployment.
 
 ![System architecture and document retrieval pipeline](docs/screenshots/system-architecture.png)
 
@@ -153,5 +153,75 @@ Dockerfile            Render Docker deployment entry point
 ```
 
 ## Limits and next steps
+
+## Deployment Architecture & Limitations
+
+The current FastAPI `/ask` implementation returns extractive, evidence-based
+answers in both lightweight and semantic retrieval modes. The standalone local
+CLI retains an optional FLAN-T5 generation path for a suitably provisioned
+machine; FLAN-T5 is not used by the public Render deployment.
+
+The project has two execution environments. The public frontend is deployed on
+Vercel and the public FastAPI backend is hosted on Render. Render Free provides
+approximately 512 MB RAM, which was not sufficient for reliably loading and
+indexing the complete 11-PDF technical corpus with the heavier local embedding
+and model stack. The public service therefore runs a lightweight demonstration
+configuration over fictional sample PDFs. It demonstrates the workflow and
+citation contract, but it does not provide the same full-corpus functionality
+as the local implementation.
+
+The complete local implementation processes all 11 supplied technical PDFs:
+195 pages become 403 page-aware ChromaDB chunks. It supports the lightweight
+`HashEmbedder` mode and an opt-in Sentence Transformers
+`all-MiniLM-L6-v2` semantic mode, each using a separate ChromaDB index. Local
+execution provides technical-document retrieval, filename/page citations and
+evidence-based abstention when the corpus lacks sufficient support. The current
+API answer path is extractive evidence selection; it does not claim that
+FLAN-T5 or another generative LLM is running.
+
+For the complete local API, keep the authorized PDFs in
+`Task2/prototype/docs/` and run:
+
+```powershell
+$env:RAG_DOCS_DIR = (Resolve-Path "Task2/prototype/docs").Path
+$env:CHROMA_DIR = "C:\path\to\local_test_chroma_full"
+$env:RAG_REUSE_INDEX = "true"
+$env:RAG_EMBEDDING_MODE = "hash"
+$env:ENABLE_LOCAL_MODELS = "false"
+python -m uvicorn backend.app:app --host 127.0.0.1 --port 7860
+```
+
+For optional local MiniLM retrieval, use a separate existing semantic index,
+set `RAG_EMBEDDING_MODE=semantic`, `ENABLE_LOCAL_MODELS=true`, and point
+`CHROMA_DIR` to that semantic index. See the detailed setup in
+[`Task2/prototype/README.md`](Task2/prototype/README.md).
+
+### RAG modes and local evaluation
+
+The RAG workflow extracts PDF text page by page, creates overlapping
+page-aware chunks, stores embeddings in ChromaDB, retrieves candidates and
+returns complete evidence snippets with filename/page citations. The public
+Render service uses deterministic `HashEmbedder` retrieval over fictional demo
+documents. The full local corpus contains 11 authorized PDFs and 403 chunks.
+
+Local semantic retrieval is opt-in with Sentence Transformers
+`all-MiniLM-L6-v2` through `RAG_EMBEDDING_MODE=semantic`. It uses a separate
+Chroma index from the hash-based index so embedding spaces cannot be mixed.
+Sentence-level selection, duplicate avoidance and abstention are implemented,
+but citations remain evidence pointers rather than proof that every generated
+claim is correct. The API modes currently return lightweight extractive
+evidence; do not describe the deployed demo as using an LLM.
+
+Locally measured observations for the semantic index were approximately 6
+seconds to load MiniLM, 34 seconds to index 403 chunks, and 12-71 ms query
+latency after model loading. These measurements depend on hardware. The
+`RAG_MAX_DISTANCE` environment variable controls the semantic cutoff and needs
+calibration with labeled questions; weak semantic matches can still require
+human review. Semantic mode is not enabled on Render Free because PyTorch and
+model memory exceed the intended lightweight deployment budget.
+
+For local semantic setup, see
+[`Task2/prototype/README.md`](Task2/prototype/README.md). Keep the supplied
+PDFs and local Chroma indexes outside GitHub and public deployment images.
 
 Shutdown events are proxy labels; the model needs operator logs to measure detection accuracy. The RAG distance threshold is uncalibrated, and the small local generator can repeat snippets or make unsupported claims. Some PDFs need OCR, and the supplied corpus mixes industrial and weather-cyclone documents. Before operational use, curate the corpus, add labeled retrieval questions, measure faithfulness and abstention, verify citations sentence by sentence, and test capacity with concurrent users. The portfolio demonstrates methods and transparent limitations; it is not a plant control system.

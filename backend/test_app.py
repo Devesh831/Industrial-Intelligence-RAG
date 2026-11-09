@@ -1,4 +1,6 @@
 """API contract checks without downloading models or reading private files."""
+import os
+os.environ["RAG_INIT_ON_STARTUP"] = "false"
 from fastapi.testclient import TestClient
 from backend.app import app, ask, Question
 

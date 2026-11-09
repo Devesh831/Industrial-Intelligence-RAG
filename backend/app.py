@@ -17,9 +17,17 @@ from pydantic import BaseModel, Field
 from Task2.prototype.rag_prototype import answer, build_index, EMBEDDING_MODEL, GENERATION_MODEL
 
 ROOT = Path(__file__).resolve().parent.parent
-DOCS = ROOT / "Task2" / "prototype" / "demo_docs"
+DEFAULT_DOCS = ROOT / "Task2" / "prototype" / "demo_docs"
+# The public deployment keeps the fictional demo corpus by default. Local
+# users can point the same API at the authorized full corpus without changing
+# the frontend or endpoint contracts.
+DOCS = Path(os.getenv("RAG_DOCS_DIR", str(DEFAULT_DOCS)))
 DB = Path(os.getenv("CHROMA_DIR", "/tmp/chroma_public_demo"))
 ENABLE_LOCAL_MODELS = os.getenv("ENABLE_LOCAL_MODELS", "false").lower() == "true"
+RAG_INIT_ON_STARTUP = os.getenv("RAG_INIT_ON_STARTUP", "true").lower() == "true"
+RAG_REUSE_INDEX = os.getenv("RAG_REUSE_INDEX", "false").lower() == "true"
+RAG_EMBEDDING_MODE = os.getenv("RAG_EMBEDDING_MODE", "hash").lower()
+RAG_MAX_DISTANCE = float(os.getenv("RAG_MAX_DISTANCE", "0.65"))
 logger = logging.getLogger("industrial_api")
 
 
@@ -54,9 +62,18 @@ def initialize_rag(app):
     try:
         from Task2.prototype.make_demo_docs import make_docs
         if not DOCS.exists() or not list(DOCS.glob("*.pdf")):
+            if DOCS != DEFAULT_DOCS:
+                raise FileNotFoundError(f"Configured RAG_DOCS_DIR has no PDFs: {DOCS}")
             make_docs()
         logger.info("RAG initialization started; rss_mb=%s; local_models=%s", memory_mb(), ENABLE_LOCAL_MODELS)
-        if ENABLE_LOCAL_MODELS:
+        if RAG_EMBEDDING_MODE == "semantic":
+            if not ENABLE_LOCAL_MODELS:
+                raise ValueError("RAG_EMBEDDING_MODE=semantic requires ENABLE_LOCAL_MODELS=true")
+            from sentence_transformers import SentenceTransformer
+            embedder = SentenceTransformer(EMBEDDING_MODEL)
+            mode = "semantic-minilm"
+            generate = lambda prompt: prompt.split("Evidence:", 1)[-1].split("Answer:", 1)[0].strip().split("\n", 1)[0].removeprefix("[1] ").strip()
+        elif ENABLE_LOCAL_MODELS:
             from sentence_transformers import SentenceTransformer
             from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
             embedder = SentenceTransformer(EMBEDDING_MODEL)
@@ -73,7 +90,16 @@ def initialize_rag(app):
                 return evidence.split("\n", 1)[0].removeprefix("[1] ").strip() or "I could not find enough relevant evidence in the indexed documents."
             mode = "lightweight-extractive"
         app.state.models_ready = True
-        collection = build_index(DOCS, DB, embedder)
+        if RAG_REUSE_INDEX:
+            import chromadb
+            db_path = DB.expanduser().resolve()
+            if not db_path.exists():
+                raise FileNotFoundError(f"Configured CHROMA_DIR does not exist: {db_path}")
+            collection = chromadb.PersistentClient(path=str(db_path)).get_collection("technical_docs")
+            if collection.count() == 0:
+                raise ValueError("Configured Chroma collection is empty")
+        else:
+            collection = build_index(DOCS, DB, embedder)
         app.state.index_ready = collection.count() > 0
         app.state.rag = (collection, embedder, generate)
         app.state.model_mode = mode
@@ -91,8 +117,17 @@ async def lifespan(app: FastAPI):
     app.state.model_mode = "starting"
     # Yield immediately so Render can connect to the injected PORT. The model
     # download and Chroma build run in a worker thread after the socket opens.
-    app.state.initializer_task = asyncio.create_task(asyncio.to_thread(initialize_rag, app))
-    yield
+    app.state.initializer_task = (asyncio.create_task(asyncio.to_thread(initialize_rag, app))
+                                  if RAG_INIT_ON_STARTUP else None)
+    try:
+        yield
+    finally:
+        task = getattr(app.state, "initializer_task", None)
+        if task and not task.done():
+            # asyncio.to_thread cannot interrupt the underlying worker. Do
+            # not await the cancelled wrapper during TestClient shutdown,
+            # otherwise a Chroma/model operation can keep the test loop open.
+            task.cancel()
 
 
 app = FastAPI(title="Industrial Intelligence Public Demo API", lifespan=lifespan)
@@ -110,9 +145,12 @@ class Question(BaseModel):
 def health():
     models_ready = bool(getattr(app.state, "models_ready", False))
     index_ready = bool(getattr(app.state, "index_ready", False))
-    payload = {"status": "ready" if models_ready and index_ready else "starting", "demo_only": True,
+    configured_full = DOCS.resolve() != DEFAULT_DOCS.resolve()
+    payload = {"status": "ready" if models_ready and index_ready else "starting", "demo_only": not configured_full,
                "models_ready": models_ready, "index_ready": index_ready,
                "model_mode": getattr(app.state, "model_mode", "starting"),
+               "corpus_mode": "local-full-technical" if configured_full else "public-fictional-demo",
+               "document_count": len(list(DOCS.glob("*.pdf"))) if DOCS.exists() else 0,
                "rss_mb": memory_mb(),
                "startup_error": getattr(app.state, "startup_error", None)}
     return JSONResponse(status_code=200 if models_ready and index_ready else 503, content=payload)
@@ -134,7 +172,9 @@ def ask(query: Question):
         raise HTTPException(status_code=503, detail="The demo models and document index are still starting")
     collection, embedder, generate = app.state.rag
     try:
-        response, sources = answer(query.question, collection, embedder, generate)
+        response, sources = answer(query.question, collection, embedder, generate, max_distance=RAG_MAX_DISTANCE)
     except Exception as exc:
         raise HTTPException(status_code=503, detail="The demo model is temporarily unavailable") from exc
-    return {"answer": response, "sources": sources, "corpus": "Fictional public demo documents"}
+    return {"answer": response, "sources": sources,
+            "corpus": "Local full technical corpus" if DOCS.resolve() != DEFAULT_DOCS.resolve()
+            else "Fictional public demo documents"}

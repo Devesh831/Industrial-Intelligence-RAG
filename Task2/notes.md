@@ -1,5 +1,9 @@
 # RAG design notes
 
+The current FastAPI answer path is extractive evidence selection. The
+standalone CLI retains optional local FLAN-T5 generation, but the public Render
+deployment and verified API modes do not load or claim to deploy that model.
+
 The prototype extracts text page by page with pypdf, builds overlapping 160-word chunks with 40-word overlap, encodes them with `sentence-transformers/all-MiniLM-L6-v2`, and stores normalized vectors and filename/page metadata in local Chroma. Cosine retrieval returns up to three chunks, filtered by a configurable distance threshold. `google/flan-t5-small` runs locally on CPU and generates an answer from short excerpts. Sources and snippets are shown alongside the answer. The separate architecture slide depicts this flow.
 
 Page boundaries make citations easy to inspect but can split tables or cross-page passages. Word windows are simple and may cut sentences; a production system should preserve sections and tables, use token-aware limits, and apply OCR to scanned pages. Some PDFs emit parser warnings; text extraction must be audited. The default 0.65 cosine distance is a starting heuristic, not a calibrated confidence score. Create a labeled question set spanning relevant and unanswerable queries and select thresholds from validation results.
