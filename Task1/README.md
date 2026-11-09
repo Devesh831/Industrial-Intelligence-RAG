@@ -1,5 +1,7 @@
 # Cyclone analysis
 
+This folder contains the reproducible analysis behind the Machine Analytics section of the public portfolio. The repository includes code and methods; the supplied workbook and row-level exports stay local. Public-facing figures use only approved aggregate results.
+
 From the repository root, create a Python environment and `pip install -r requirements.txt`, then run `python Task1/task1_analysis.py "C:\path\to\data.xlsx"`. The `internship-data-1` worksheet is read and CSV, JSON and PNG outputs are written here. Run `python -m unittest discover -s Task1 -p "test_*.py"` for event-boundary checks, followed by `python Task1/validate_outputs.py` to check output durations, cluster counts and forecast metrics. Supplied data and derived outputs are ignored by Git.
 
 The inclusive five-minute index includes missing timestamp bins. Each sensor is coerced to numeric; internal missing runs of at most three bins are interpolated, while longer gaps remain unknown. Outliers are retained in descriptive tables and event evidence; clipping to the 0.5th–99.5th percentiles applies only to clustering and anomaly model inputs. Units, instrument limits and time zone were not supplied.
@@ -11,3 +13,5 @@ For complete non-proxy-shutdown rows, four K-means clusters use standardized, cl
 Forecasting compares persistence against a direct 12-output random forest using 12 observed past readings. Training targets end before the chronological 80% split; evaluation starts after it on non-overlapping hourly origins. Only fully observed windows are used, with no interpolated inputs or targets. MAE and RMSE aggregate all horizons and origins. Sampling up to 30,000 training origins and fitting 60 trees makes the run practical; this is a single held-out split, not a production evaluation. Missing windows and unobserved shutdowns can bias the result.
 
 `shutdown_periods.csv`, `anomalous_periods.csv`, `clusters_summary.csv`, `forecasts.csv`, `forecast_metrics.json`, `results.json`, `summary_statistics.csv`, `correlation_matrix.csv` and `plots/` contain the requested artifacts. `selected_anomaly_evidence.csv` compares the hour before, the event and the hour after four long events. See `findings.md` for the observed run and hypotheses. Re-run after changing input or assumptions; the findings apply only to the supplied workbook and stated configuration.
+
+The portfolio frontend reads a small, reviewed aggregate summary from `backend/app.py`. It never requests raw rows or plots from this folder. To regenerate the public forecast-by-horizon chart from a permitted private output, run `python scripts/make_public_charts.py`, review the resulting SVG, and commit only the aggregate chart.

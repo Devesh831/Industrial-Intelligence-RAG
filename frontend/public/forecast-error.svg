@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="330" viewBox="0 0 760 330" role="img" aria-label="Forecast MAE by horizon, persistence versus random forest">
+<rect width="100%" height="100%" fill="#f7faf8"/><text x="60" y="35" font-family="Arial" font-weight="bold" font-size="19" fill="#152b32">Forecast error by horizon</text>
+<text x="60" y="55" font-family="Arial" font-size="12" fill="#65747a">Held-out MAE · twelve five-minute steps · units unspecified</text>
+<path d="M70 80 V270 H710" fill="none" stroke="#93aaa6" stroke-width="1"/>
+<path d="M 70 179.8 L 125 177.7 L 180 176.1 L 235 171.6 L 290 170.2 L 345 166.4 L 400 165.0 L 455 163.7 L 510 160.7 L 565 159.4 L 620 158.0 L 675 157.6" fill="none" stroke="#6e8294" stroke-width="3"/>
+<path d="M 70 198.9 L 125 196.8 L 180 193.7 L 235 192.2 L 290 189.1 L 345 185.7 L 400 185.2 L 455 181.2 L 510 179.1 L 565 177.8 L 620 178.1 L 675 176.1" fill="none" stroke="#087f70" stroke-width="3"/>
+<text x="560" y="93" font-family="Arial" font-size="12" fill="#6e8294">— Persistence</text>
+<text x="560" y="113" font-family="Arial" font-size="12" fill="#087f70">— Random forest</text>
+<text x="310" y="310" font-family="Arial" font-size="12" fill="#65747a">Forecast horizon (5-minute steps)</text>
+</svg>

@@ -15,6 +15,11 @@ Task2/prototype/chroma_db/
 .deps/
 .build/
 .final/
+frontend/node_modules/
+frontend/.npm-cache/
+frontend/.next/
+frontend/.env.local
+backend/__pycache__/
 *.pptx
 !Task2/architecture_diagram.pptx
 __pycache__/
