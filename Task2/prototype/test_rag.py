@@ -36,5 +36,10 @@ class RagTests(unittest.TestCase):
         text, sources = answer("What happened?", Collection(.1), Embedder(), lambda _: "A fan issue")
         self.assertEqual(text, "A fan issue"); self.assertEqual(sources[0]["page"], 2)
 
+    def test_unrelated_query_abstains_when_dense_match_is_weak(self):
+        text, sources = answer("What is the capital of France?", Collection(.9), Embedder(), lambda _: "bad")
+        self.assertEqual(text, FALLBACK)
+        self.assertEqual(sources, [])
+
 
 if __name__ == "__main__": unittest.main()
