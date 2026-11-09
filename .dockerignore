@@ -1,0 +1,14 @@
+.git
+.deps
+.build
+.final
+frontend
+Task1
+Task2/prototype/docs
+Task2/prototype/demo_docs
+Task2/prototype/chroma_db
+**/*.pdf
+**/*.xlsx
+**/*.pptx
+**/__pycache__
+*.zip
