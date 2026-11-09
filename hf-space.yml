@@ -1,0 +1,4 @@
+# Copy this file to the root README YAML block when creating the Hugging Face Space.
+sdk: docker
+app_port: 7860
+short_description: Public demo API for cited industrial document search
