@@ -1,0 +1,17 @@
+# Supplied and derived data may be confidential.
+*.xlsx
+*.xls
+*.pdf
+Task1/inspection/
+Task1/outputs/
+Task1/plots/
+Task2/prototype/docs/
+Task2/prototype/chroma_db/
+.venv/
+.deps/
+__pycache__/
+*.py[cod]
+.env
+.env.*
+!.env.example
+.ipynb_checkpoints/
