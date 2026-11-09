@@ -1,6 +1,6 @@
 # Cyclone analysis
 
-From the repository root, create a Python environment and `pip install -r requirements.txt`, then run `python Task1/task1_analysis.py "C:\path\to\data.xlsx"`. The `internship-data-1` worksheet is read and CSV, JSON and PNG outputs are written here. Run `python -m unittest discover -s Task1 -p "test_*.py"` for event-boundary checks. Supplied data and derived outputs are ignored by Git.
+From the repository root, create a Python environment and `pip install -r requirements.txt`, then run `python Task1/task1_analysis.py "C:\path\to\data.xlsx"`. The `internship-data-1` worksheet is read and CSV, JSON and PNG outputs are written here. Run `python -m unittest discover -s Task1 -p "test_*.py"` for event-boundary checks, followed by `python Task1/validate_outputs.py` to check output durations, cluster counts and forecast metrics. Supplied data and derived outputs are ignored by Git.
 
 The inclusive five-minute index includes missing timestamp bins. Each sensor is coerced to numeric; internal missing runs of at most three bins are interpolated, while longer gaps remain unknown. Outliers are retained in descriptive tables and event evidence; clipping to the 0.5th–99.5th percentiles applies only to clustering and anomaly model inputs. Units, instrument limits and time zone were not supplied.
 
