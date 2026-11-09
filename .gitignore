@@ -13,6 +13,9 @@ Task2/prototype/docs/
 Task2/prototype/chroma_db/
 .venv/
 .deps/
+.build/
+.final/
+*.pptx
 __pycache__/
 *.py[cod]
 .env
