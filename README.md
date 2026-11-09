@@ -16,7 +16,7 @@ Industrial sensor histories are irregular and lack reliable event labels. Operat
 | Builds a strict five-minute timeline and audits missing values | Extracts text page by page from PDFs |
 | Finds low-temperature/low-draft periods with an explicit proxy rule | Splits pages into overlapping chunks and embeds them with MiniLM |
 | Clusters active sensor readings with K-means | Searches a local Chroma vector index |
-| Detects anomalies separately within each cluster | Uses local FLAN-T5-small for a response, with filename, page and snippet |
+| Detects anomalies separately within each cluster | Full local mode uses FLAN-T5-small; Render Free uses a labeled lightweight extractive mode, with filename, page and snippet |
 | Compares persistence and a 12-step random forest on later data | Falls back when retrieval is weak and filters selected sensitive queries |
 
 ## Measured Task 1 results

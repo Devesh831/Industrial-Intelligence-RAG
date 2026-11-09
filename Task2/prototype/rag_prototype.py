@@ -4,8 +4,6 @@ import re
 from pathlib import Path
 import chromadb
 from pypdf import PdfReader
-from sentence_transformers import SentenceTransformer
-from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
 EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 GENERATION_MODEL = "google/flan-t5-small"
@@ -82,6 +80,10 @@ def main():
     parser.add_argument("--max-distance", type=float, default=.65)
     parser.add_argument("--reuse-index", action="store_true", help="Reuse existing index; rebuild after changing documents")
     args = parser.parse_args()
+    # Keep heavyweight ML imports out of module import time so the Render
+    # lightweight API can start without loading PyTorch.
+    from sentence_transformers import SentenceTransformer
+    from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
     embedder = SentenceTransformer(EMBEDDING_MODEL)
     collection = (chromadb.PersistentClient(path=str(args.db)).get_collection("technical_docs")
                   if args.reuse_index else build_index(args.docs, args.db, embedder))
