@@ -96,7 +96,9 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Industrial Intelligence Public Demo API", lifespan=lifespan)
-origins = [value.strip() for value in os.getenv("FRONTEND_ORIGINS", "http://localhost:3000").split(",") if value.strip()]
+configured_origins = [value.strip() for value in os.getenv("FRONTEND_ORIGINS", "").split(",") if value.strip()]
+# Both loopback spellings are used by local browsers and development tools.
+origins = sorted(set(configured_origins + ["http://localhost:3000", "http://127.0.0.1:3000"]))
 app.add_middleware(CORSMiddleware, allow_origins=origins, allow_credentials=False, allow_methods=["GET", "POST"], allow_headers=["Content-Type"])
 
 

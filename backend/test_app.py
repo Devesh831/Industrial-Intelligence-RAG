@@ -61,3 +61,15 @@ def test_lightweight_embedder_is_deterministic():
     from backend.app import HashEmbedder
     embedder = HashEmbedder()
     assert embedder.encode(["draft pressure"])[0] == embedder.encode(["draft pressure"])[0]
+
+
+def test_cors_allows_both_local_loopback_origins():
+    client = TestClient(app)
+    for origin in ("http://localhost:3000", "http://127.0.0.1:3000"):
+        response = client.options("/ask", headers={
+            "Origin": origin,
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "content-type",
+        })
+        assert response.status_code == 200
+        assert response.headers["access-control-allow-origin"] == origin

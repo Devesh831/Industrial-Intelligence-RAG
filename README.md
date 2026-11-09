@@ -76,7 +76,7 @@ Python, Pandas, NumPy, Scikit-learn, Matplotlib, FastAPI, Pydantic, pypdf, Sente
 
 1. Import the same GitHub repository into Vercel.
 2. Set **Root Directory** to `frontend`. Vercel will use `frontend/vercel.json`, `npm install --no-audit --no-fund` and `npm run build`.
-3. Add the Production environment variable `NEXT_PUBLIC_API_BASE_URL=https://YOUR-SERVICE.onrender.com`. Redeploy after changing it; the browser needs the value at build time.
+3. Add the Production environment variable `NEXT_PUBLIC_API_BASE_URL=https://industrial-intelligence-rag.onrender.com`. Redeploy after changing it; the browser needs the value at build time. For local development, copy `frontend/.env.example` to `frontend/.env.local` and use `http://localhost:7860` only when running the backend locally.
 4. Open the Vercel preview first and verify the analytics section loads, the assistant returns citations, and browser requests do not show CORS errors. Then promote the tested deployment.
 5. Replace the `Live app` placeholder near the top of this README only after the Vercel URL and its API calls have been tested. Do not publish a placeholder as if it were live.
 
