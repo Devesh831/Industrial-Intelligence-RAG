@@ -11,6 +11,20 @@ FALLBACK = "I could not find enough relevant evidence in the indexed documents."
 SENSITIVE = re.compile(r"\b(password|api[ _-]?key|secret key|private key|social security|credit card)\b", re.I)
 
 
+def plain_embeddings(encoded):
+    """Normalize NumPy arrays and Python-list embeddings for ChromaDB."""
+    values = encoded.tolist() if hasattr(encoded, "tolist") else encoded
+    if not isinstance(values, (list, tuple)) or not values:
+        raise ValueError("Embedder must return a non-empty 2D numeric sequence")
+    rows = [row.tolist() if hasattr(row, "tolist") else row for row in values]
+    if any(not isinstance(row, (list, tuple)) or not row for row in rows):
+        raise ValueError("Embedder must return a 2D numeric sequence")
+    try:
+        return [[float(value) for value in row] for row in rows]
+    except (TypeError, ValueError) as exc:
+        raise ValueError("Embedding values must be numeric") from exc
+
+
 def chunks(text, size=160, overlap=40):
     """Word windows, per page; no chunk crosses a page boundary."""
     if size <= 0 or not 0 <= overlap < size:
@@ -46,7 +60,7 @@ def build_index(folder, db, embedder):
     collection = client.create_collection(name, metadata={"hnsw:space":"cosine"})
     for start in range(0, len(records), 128):
         batch = records[start:start+128]
-        vectors = embedder.encode([r[1] for r in batch], normalize_embeddings=True).tolist()
+        vectors = plain_embeddings(embedder.encode([r[1] for r in batch], normalize_embeddings=True))
         collection.add(ids=[r[0] for r in batch], documents=[r[1] for r in batch], metadatas=[r[2] for r in batch], embeddings=vectors)
     return collection
 
@@ -56,7 +70,7 @@ def answer(question, collection, embedder, generator, max_distance=.65, top_k=3)
         return "Enter a nonempty question of at most 300 characters.", []
     if SENSITIVE.search(question):
         return "This prototype does not answer requests for credentials or sensitive identifiers.", []
-    vec = embedder.encode([question], normalize_embeddings=True).tolist()
+    vec = plain_embeddings(embedder.encode([question], normalize_embeddings=True))
     result = collection.query(query_embeddings=vec, n_results=min(top_k, collection.count()), include=["documents", "metadatas", "distances"])
     hits = [(t,m,d) for t,m,d in zip(result["documents"][0], result["metadatas"][0], result["distances"][0]) if d <= max_distance]
     if not hits:

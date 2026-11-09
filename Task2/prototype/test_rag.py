@@ -1,6 +1,6 @@
 """Small deterministic tests; model and corpus are tested separately."""
 import unittest
-from rag_prototype import answer, chunks, FALLBACK
+from rag_prototype import answer, chunks, FALLBACK, plain_embeddings
 
 
 class Embedder:
@@ -17,6 +17,13 @@ class Collection:
 
 
 class RagTests(unittest.TestCase):
+    def test_plain_embeddings_accepts_numpy_array(self):
+        import numpy as np
+        self.assertEqual(plain_embeddings(np.array([[1, 2], [3, 4]])), [[1.0, 2.0], [3.0, 4.0]])
+
+    def test_plain_embeddings_accepts_python_list(self):
+        self.assertEqual(plain_embeddings([[1, 2]]), [[1.0, 2.0]])
+
     def test_chunk_overlap(self):
         self.assertEqual(list(chunks("a b c d e f", size=4, overlap=2)), ["a b c d", "c d e f"])
     def test_sensitive_query_is_blocked(self):

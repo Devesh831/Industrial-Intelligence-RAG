@@ -55,7 +55,7 @@ def initialize_rag(app):
         from Task2.prototype.make_demo_docs import make_docs
         if not DOCS.exists() or not list(DOCS.glob("*.pdf")):
             make_docs()
-        logger.info("RAG initialization started; rss_mb=%.1f; local_models=%s", memory_mb(), ENABLE_LOCAL_MODELS)
+        logger.info("RAG initialization started; rss_mb=%s; local_models=%s", memory_mb(), ENABLE_LOCAL_MODELS)
         if ENABLE_LOCAL_MODELS:
             from sentence_transformers import SentenceTransformer
             from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
@@ -77,10 +77,10 @@ def initialize_rag(app):
         app.state.index_ready = collection.count() > 0
         app.state.rag = (collection, embedder, generate)
         app.state.model_mode = mode
-        logger.info("RAG initialization complete; mode=%s; chunks=%s; rss_mb=%.1f", mode, collection.count(), memory_mb())
+        logger.info("RAG initialization complete; mode=%s; chunks=%s; rss_mb=%s", mode, collection.count(), memory_mb())
     except Exception as exc:
         app.state.startup_error = type(exc).__name__
-        logger.exception("RAG initialization failed; rss_mb=%.1f", memory_mb())
+        logger.exception("RAG initialization failed; rss_mb=%s", memory_mb())
 
 
 @asynccontextmanager
