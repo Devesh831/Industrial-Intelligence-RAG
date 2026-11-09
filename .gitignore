@@ -5,6 +5,10 @@
 Task1/inspection/
 Task1/outputs/
 Task1/plots/
+Task1/*.csv
+Task1/results.json
+Task1/forecast_metrics.json
+Task1/findings.md
 Task2/prototype/docs/
 Task2/prototype/chroma_db/
 .venv/
