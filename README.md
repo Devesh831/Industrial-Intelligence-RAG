@@ -69,14 +69,14 @@ Python, Pandas, NumPy, Scikit-learn, Matplotlib, FastAPI, Pydantic, pypdf, Sente
 1. In Render, choose **New → Web Service**, connect GitHub and select `Devesh831/Industrial-Intelligence-RAG`.
 2. Use the checked-in `render.yaml` as the Blueprint, or configure the service manually with Docker runtime, root directory `.`, root `Dockerfile`, and Free plan. The root Dockerfile installs `backend/requirements.txt`, copies only `Task2` and `backend`, and listens on Render's injected `PORT` (falling back to 7860 locally). `.dockerignore` excludes `frontend`, `Task1`, private PDFs, spreadsheets, generated plots and local caches.
 3. Set `FRONTEND_ORIGINS` to the exact Vercel origin you will use later. Before the frontend exists, use `http://localhost:3000`; update it and redeploy after Vercel is created.
-4. Set the Render health check path to `/health`. Render should route traffic only when this endpoint returns 200 with `status: "ready"`, `models_ready: true` and `index_ready: true`. Model download and Chroma indexing can take several minutes on a Free instance.
+4. Set the Render health check path to `/health`. The FastAPI lifespan yields immediately so the process binds Render's port before a background worker downloads models and builds Chroma. Render should route traffic only when this endpoint returns 200 with `status: "ready"`, `models_ready: true` and `index_ready: true`. Model download and Chroma indexing can take several minutes on a Free instance.
 5. Verify `GET https://YOUR-SERVICE.onrender.com/analytics`. Verify `POST /ask` with JSON such as `{"question":"What does the public demo document say about a draft drop?"}`. A 503 while health is `starting` is expected; inspect Render logs if it remains 503 after model loading.
 
 ### 2. Vercel frontend
 
 1. Import the same GitHub repository into Vercel.
 2. Set **Root Directory** to `frontend`. Vercel will use `frontend/vercel.json`, `npm install --no-audit --no-fund` and `npm run build`.
-3. Add the Production environment variable `NEXT_PUBLIC_API_BASE_URL=https://YOUR-SPACE-SUBDOMAIN.hf.space`. Redeploy after changing it; the browser needs the value at build time.
+3. Add the Production environment variable `NEXT_PUBLIC_API_BASE_URL=https://YOUR-SERVICE.onrender.com`. Redeploy after changing it; the browser needs the value at build time.
 4. Open the Vercel preview first and verify the analytics section loads, the assistant returns citations, and browser requests do not show CORS errors. Then promote the tested deployment.
 5. Replace the `Live app` placeholder near the top of this README only after the Vercel URL and its API calls have been tested. Do not publish a placeholder as if it were live.
 

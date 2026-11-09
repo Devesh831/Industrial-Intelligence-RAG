@@ -1,5 +1,6 @@
 """Public demo API. Only aggregate results and generated demo PDFs are loaded."""
 import os
+import asyncio
 from contextlib import asynccontextmanager
 from pathlib import Path
 from fastapi import FastAPI, HTTPException
@@ -14,12 +15,8 @@ DOCS = ROOT / "Task2" / "prototype" / "demo_docs"
 DB = Path(os.getenv("CHROMA_DIR", "/tmp/chroma_public_demo"))
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    app.state.models_ready = False
-    app.state.index_ready = False
-    app.state.startup_error = None
-    # Model initialization happens once per worker, not on each request.
+def initialize_rag(app):
+    """Load models and build the small demo index outside the server startup path."""
     try:
         from sentence_transformers import SentenceTransformer
         from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
@@ -38,6 +35,16 @@ async def lifespan(app: FastAPI):
         app.state.rag = (collection, embedder, generate)
     except Exception as exc:
         app.state.startup_error = type(exc).__name__
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    app.state.models_ready = False
+    app.state.index_ready = False
+    app.state.startup_error = None
+    # Yield immediately so Render can connect to the injected PORT. The model
+    # download and Chroma build run in a worker thread after the socket opens.
+    app.state.initializer_task = asyncio.create_task(asyncio.to_thread(initialize_rag, app))
     yield
 
 

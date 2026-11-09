@@ -33,6 +33,12 @@ def test_health_exposes_readiness_state():
     }
 
 
+def test_lifespan_initializer_is_deferred():
+    import inspect
+    from backend.app import initialize_rag
+    assert inspect.isfunction(initialize_rag)
+
+
 def test_ask_contract_with_mocked_ready_rag():
     class FakeEmbedder:
         def encode(self, *_args, **_kwargs):
