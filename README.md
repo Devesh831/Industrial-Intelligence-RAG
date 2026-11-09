@@ -1,13 +1,3 @@
----
-title: Industrial Intelligence Public Demo API
-emoji: 🏭
-colorFrom: green
-colorTo: blue
-sdk: docker
-app_port: 7860
-short_description: Public FastAPI demo for cited industrial document search
----
-
 # Industrial Intelligence — machine analytics and cited document search
 
 **A reproducible cyclone sensor analysis paired with a public document question-answering demo.** Built by Devesh Gautam as a data science internship portfolio project. The analysis studies operating patterns, proxy shutdowns, state-specific anomalies and one-hour temperature forecasts. The app presents aggregate findings and a RAG assistant backed by fictional public sample PDFs.
@@ -62,7 +52,7 @@ The same flow is provided as an editable [PowerPoint architecture diagram](Task2
 
 ## Stack
 
-Python, Pandas, NumPy, Scikit-learn, Matplotlib, FastAPI, Pydantic, pypdf, Sentence Transformers, Chroma, Hugging Face Transformers, PyTorch, Next.js, React and TypeScript. The frontend is prepared for Vercel; the Dockerized API is prepared for Hugging Face Spaces.
+Python, Pandas, NumPy, Scikit-learn, Matplotlib, FastAPI, Pydantic, pypdf, Sentence Transformers, Chroma, Hugging Face Transformers, PyTorch, Next.js, React and TypeScript. The frontend is prepared for Vercel; the Dockerized API is prepared for Render.
 
 ## Run locally
 
@@ -74,14 +64,13 @@ Python, Pandas, NumPy, Scikit-learn, Matplotlib, FastAPI, Pydantic, pypdf, Sente
 
 ## Deploy in this order
 
-### 1. Hugging Face Spaces backend
+### 1. Render backend
 
-1. Create a new **Docker** Space. Use the repository `Devesh831/Industrial-Intelligence-RAG` as the source, or push the repository contents into the Space repository.
-2. Keep the root `Dockerfile` as the build entry point. It installs `backend/requirements.txt`, copies only `Task2` and `backend`, and starts Uvicorn on port `7860`. `.dockerignore` excludes `frontend`, `Task1`, private PDFs, spreadsheets, generated plots and local caches.
-3. Confirm the root README YAML front matter contains `sdk: docker` and `app_port: 7860`. The checked-in `hf-space.yml` is a reference copy; Hugging Face reads the YAML block in `README.md`.
-4. Add the Space variable `FRONTEND_ORIGINS` with the exact Vercel origin you will use later. For the first backend check, `http://localhost:3000` is sufficient, but replace it before making browser requests from production.
-5. Wait for the build to finish and poll `https://YOUR-SPACE-SUBDOMAIN.hf.space/health`. Continue only when the response reports `status: "ready"`, `models_ready: true` and `index_ready: true`. Model download and Chroma indexing can take several minutes on free CPU.
-6. Verify `GET /analytics`. Verify `POST /ask` with JSON such as `{"question":"What does the public demo document say about a draft drop?"}`. A 503 while health is `starting` is expected; a 503 after readiness needs Space logs.
+1. In Render, choose **New → Web Service**, connect GitHub and select `Devesh831/Industrial-Intelligence-RAG`.
+2. Use the checked-in `render.yaml` as the Blueprint, or configure the service manually with Docker runtime, root directory `.`, root `Dockerfile`, and Free plan. The root Dockerfile installs `backend/requirements.txt`, copies only `Task2` and `backend`, and listens on Render's injected `PORT` (falling back to 7860 locally). `.dockerignore` excludes `frontend`, `Task1`, private PDFs, spreadsheets, generated plots and local caches.
+3. Set `FRONTEND_ORIGINS` to the exact Vercel origin you will use later. Before the frontend exists, use `http://localhost:3000`; update it and redeploy after Vercel is created.
+4. Set the Render health check path to `/health`. Render should route traffic only when this endpoint returns 200 with `status: "ready"`, `models_ready: true` and `index_ready: true`. Model download and Chroma indexing can take several minutes on a Free instance.
+5. Verify `GET https://YOUR-SERVICE.onrender.com/analytics`. Verify `POST /ask` with JSON such as `{"question":"What does the public demo document say about a draft drop?"}`. A 503 while health is `starting` is expected; inspect Render logs if it remains 503 after model loading.
 
 ### 2. Vercel frontend
 
@@ -91,7 +80,7 @@ Python, Pandas, NumPy, Scikit-learn, Matplotlib, FastAPI, Pydantic, pypdf, Sente
 4. Open the Vercel preview first and verify the analytics section loads, the assistant returns citations, and browser requests do not show CORS errors. Then promote the tested deployment.
 5. Replace the `Live app` placeholder near the top of this README only after the Vercel URL and its API calls have been tested. Do not publish a placeholder as if it were live.
 
-If the Space sleeps or rebuilds, allow startup time for model loading. Free CPU resources and temporary storage limit availability. Use persistent storage, cached model weights and monitored capacity for a production service.
+If the Render service sleeps, allow roughly a minute for a cold start before retrying. Render Free web services spin down after inactivity and use an ephemeral filesystem, so the Hugging Face model cache and Chroma index may be downloaded or rebuilt after restarts. Render persistent disks are not available on Free web services; this demo intentionally rebuilds its small fictional index at startup. The free instance's memory and CPU may be insufficient for larger models or a large corpus. Render describes these constraints in its [free service documentation](https://render.com/docs/free), [filesystem documentation](https://render.com/docs/disks), and [health check documentation](https://render.com/docs/health-checks).
 
 `FRONTEND_ORIGINS` is an exact CORS allowlist. The browser-facing API URL is public by design and must not contain credentials. Keep service tokens only in server-side secrets if a future feature needs them. See [backend instructions](backend/README.md) and [RAG instructions](Task2/prototype/README.md).
 
@@ -103,7 +92,7 @@ backend/              FastAPI public demo and Docker requirements
 Task1/                Reproducible private-data analysis and validators
 Task2/prototype/      Reusable local PDF RAG logic and fictional demo generator
 Task2/notes.md        Retrieval, guardrail and scaling trade-offs
-Dockerfile            Hugging Face Spaces deployment entry point
+Dockerfile            Render Docker deployment entry point
 ```
 
 ## Limits and next steps

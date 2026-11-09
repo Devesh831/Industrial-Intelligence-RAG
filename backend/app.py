@@ -3,6 +3,7 @@ import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
@@ -53,9 +54,10 @@ class Question(BaseModel):
 def health():
     models_ready = bool(getattr(app.state, "models_ready", False))
     index_ready = bool(getattr(app.state, "index_ready", False))
-    return {"status": "ready" if models_ready and index_ready else "starting", "demo_only": True,
-            "models_ready": models_ready, "index_ready": index_ready,
-            "startup_error": getattr(app.state, "startup_error", None)}
+    payload = {"status": "ready" if models_ready and index_ready else "starting", "demo_only": True,
+               "models_ready": models_ready, "index_ready": index_ready,
+               "startup_error": getattr(app.state, "startup_error", None)}
+    return JSONResponse(status_code=200 if models_ready and index_ready else 503, content=payload)
 
 
 @app.get("/analytics")

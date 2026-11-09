@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: industrial-intelligence-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: FRONTEND_ORIGINS
+        sync: false
+      - key: CHROMA_DIR
+        value: /tmp/chroma_render
+      - key: HF_HOME
+        value: /tmp/hf-cache
+      - key: PYTHONUNBUFFERED
+        value: "1"

@@ -6,7 +6,7 @@ from backend.app import app, ask, Question
 def test_public_aggregates_and_health():
     client = TestClient(app)
     health = client.get('/health')
-    assert health.status_code == 200 and health.json()['demo_only'] is True
+    assert health.status_code == 503 and health.json()['demo_only'] is True
     analytics = client.get('/analytics')
     assert analytics.status_code == 200
     assert analytics.json()['rows'] == 377719
@@ -25,7 +25,7 @@ def test_health_exposes_readiness_state():
     app.state.index_ready = False
     app.state.startup_error = "TestError"
     response = client.get('/health')
-    assert response.status_code == 200
+    assert response.status_code == 503
     assert response.json() == {
         "status": "starting", "demo_only": True,
         "models_ready": False, "index_ready": False,
