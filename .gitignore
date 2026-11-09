@@ -16,6 +16,7 @@ Task2/prototype/chroma_db/
 .build/
 .final/
 *.pptx
+!Task2/architecture_diagram.pptx
 __pycache__/
 *.py[cod]
 .env
