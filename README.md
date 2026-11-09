@@ -56,7 +56,7 @@ The assistant demonstrates natural-language technical questions, retrieved answe
 
 ### 4. System Architecture & Retrieval Pipeline
 
-This section shows the retrieval workflow from PDF pages to word chunks, isolated HashEmbedder or MiniLM indexes, Chroma search, extractive evidence selection and cited snippets. The standalone CLI's optional FLAN-T5 path is local-only and is not used by the current API or public deployment.
+This section shows the retrieval workflow from PDF pages to word chunks, isolated HashEmbedder or MiniLM indexes, Chroma search, extractive evidence selection and cited snippets. The current API and public deployment use evidence-based extractive answers; no generative model is deployed.
 
 ![System architecture and document retrieval pipeline](docs/screenshots/system-architecture.png)
 
@@ -71,7 +71,7 @@ Industrial sensor histories are irregular and lack reliable event labels. Operat
 | Builds a strict five-minute timeline and audits missing values | Extracts text page by page from PDFs |
 | Finds low-temperature/low-draft periods with an explicit proxy rule | Splits pages into overlapping chunks and embeds them with MiniLM |
 | Clusters active sensor readings with K-means | Searches a local Chroma vector index |
-| Detects anomalies separately within each cluster | Full local mode uses FLAN-T5-small; Render Free uses a labeled lightweight extractive mode, with filename, page and snippet |
+| Detects anomalies separately within each cluster | Full local mode supports the same cited retrieval pipeline; Render Free uses a labeled lightweight extractive mode, with filename, page and snippet |
 | Compares persistence and a 12-step random forest on later data | Falls back when retrieval is weak and filters selected sensitive queries |
 
 ## Measured Task 1 results
@@ -94,7 +94,7 @@ flowchart LR
   D --> E[Local Chroma index]
   Q[Question] --> E
   E --> F[Distance filter]
-  F --> G[FLAN-T5-small]
+  F --> G[Extractive evidence answer]
   G --> H[Answer + page snippets]
   M[Private workbook] --> N[Offline Python analysis]
   N --> O[Approved aggregate metrics]
@@ -158,8 +158,7 @@ Dockerfile            Render Docker deployment entry point
 
 The current FastAPI `/ask` implementation returns extractive, evidence-based
 answers in both lightweight and semantic retrieval modes. The standalone local
-CLI retains an optional FLAN-T5 generation path for a suitably provisioned
-machine; FLAN-T5 is not used by the public Render deployment.
+The current CLI and API use evidence-based extractive answers; no generative model is used by the public Render deployment.
 
 The project has two execution environments. The public frontend is deployed on
 Vercel and the public FastAPI backend is hosted on Render. Render Free provides
@@ -177,7 +176,7 @@ The complete local implementation processes all 11 supplied technical PDFs:
 execution provides technical-document retrieval, filename/page citations and
 evidence-based abstention when the corpus lacks sufficient support. The current
 API answer path is extractive evidence selection; it does not claim that
-FLAN-T5 or another generative LLM is running.
+No generative LLM is running in the current API or public deployment.
 
 For the complete local API, keep the authorized PDFs in
 `Task2/prototype/docs/` and run:
