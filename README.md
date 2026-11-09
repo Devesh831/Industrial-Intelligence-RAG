@@ -1,9 +1,37 @@
-# Industrial Intelligence — machine analytics and cited document search
+# Industrial Intelligence — Machine Analytics & Cited RAG
+
+[![Backend and RAG tests](https://img.shields.io/badge/backend%20%2B%20RAG-14%20passed-16a34a.svg)](backend/test_app.py)
+[![Next.js](https://img.shields.io/badge/Next.js-15.5.29-black.svg)](frontend/package.json)
+[![Python](https://img.shields.io/badge/Python-3.11%2B-3776ab.svg)](requirements.txt)
+[![Render](https://img.shields.io/badge/API-Render%20Free-0f766e.svg)](render.yaml)
 
 **A reproducible cyclone sensor analysis paired with a public document question-answering demo.** Built by Devesh Gautam as a data science internship portfolio project. The analysis studies operating patterns, proxy shutdowns, state-specific anomalies and one-hour temperature forecasts. The app presents aggregate findings and a RAG assistant backed by fictional public sample PDFs.
 
 **Live app:** _Deployment pending — Vercel URL will be added after verification._  
 **Source:** [github.com/Devesh831/Industrial-Intelligence-RAG](https://github.com/Devesh831/Industrial-Intelligence-RAG)
+
+## Table of contents
+
+- [Application showcase](#screenshots)
+- [Why this project](#why-this-project)
+- [What it does](#what-it-does)
+- [Measured Task 1 results](#measured-task-1-results)
+- [Architecture](#architecture)
+- [Stack](#stack)
+- [Run locally](#run-locally)
+- [Deploy in this order](#deploy-in-this-order)
+- [Repository map](#repository-map)
+- [Limits and next steps](#limits-and-next-steps)
+
+## Screenshots
+
+![Homepage hero](docs/screenshots/homepage-hero.png)
+
+![Machine analytics](docs/screenshots/machine-analytics.png)
+
+![RAG assistant](docs/screenshots/rag-assistant.png)
+
+![Architecture](docs/screenshots/architecture.png)
 
 ## Why this project
 
