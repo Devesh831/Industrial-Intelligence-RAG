@@ -7,8 +7,13 @@
 
 **A reproducible cyclone sensor analysis paired with a public document question-answering demo.** Built by Devesh Gautam as a data science internship portfolio project. The analysis studies operating patterns, proxy shutdowns, state-specific anomalies and one-hour temperature forecasts. The app presents aggregate findings and a RAG assistant backed by fictional public sample PDFs.
 
-**Live app:** _Deployment pending — Vercel URL will be added after verification._  
-**Source:** [github.com/Devesh831/Industrial-Intelligence-RAG](https://github.com/Devesh831/Industrial-Intelligence-RAG)
+## Live demo
+
+**Live Website:** [industrial-intelligence-rag.vercel.app](https://industrial-intelligence-rag.vercel.app)  
+**GitHub Repository:** [Devesh831/Industrial-Intelligence-RAG](https://github.com/Devesh831/Industrial-Intelligence-RAG)  
+**Backend API:** [industrial-intelligence-rag.onrender.com](https://industrial-intelligence-rag.onrender.com)
+
+The frontend is deployed on Vercel and communicates with the FastAPI backend hosted on Render. The public backend uses the documented lightweight RAG mode on the free tier.
 
 ## Table of contents
 
