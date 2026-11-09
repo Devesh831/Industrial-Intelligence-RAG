@@ -1,3 +1,13 @@
+---
+title: Industrial Intelligence Public Demo API
+emoji: 🏭
+colorFrom: green
+colorTo: blue
+sdk: docker
+app_port: 7860
+short_description: Public FastAPI demo for cited industrial document search
+---
+
 # Industrial Intelligence — machine analytics and cited document search
 
 **A reproducible cyclone sensor analysis paired with a public document question-answering demo.** Built by Devesh Gautam as a data science internship portfolio project. The analysis studies operating patterns, proxy shutdowns, state-specific anomalies and one-hour temperature forecasts. The app presents aggregate findings and a RAG assistant backed by fictional public sample PDFs.
@@ -62,11 +72,26 @@ Python, Pandas, NumPy, Scikit-learn, Matplotlib, FastAPI, Pydantic, pypdf, Sente
 4. In `frontend`, copy `.env.example` to `.env.local`, run `npm install`, then `npm run dev`. Open `http://localhost:3000`.
 5. Run `python -m pytest backend/test_app.py Task2/prototype/test_rag.py -q` and `npm run build` before deployment.
 
-## Deploy
+## Deploy in this order
 
-1. Create a **Docker** Space on Hugging Face. Push this repository to the Space. Its root `Dockerfile` runs FastAPI on port `7860` and generates fictional PDFs at startup. Set Space variable `FRONTEND_ORIGINS=https://YOUR-VERCEL-DOMAIN`. Keep the Space public only after confirming that its build context contains no private data.
-2. Create a Vercel project from this GitHub repository. Set **Root Directory** to `frontend`. Set `NEXT_PUBLIC_API_BASE_URL=https://YOUR-SPACE-SUBDOMAIN.hf.space` in Vercel environment variables. Deploy and test `/health`, dashboard metrics, a supported question, and an unsupported question. Replace the live-link placeholder above with the verified Vercel URL.
-3. If the Space sleeps or rebuilds, allow startup time for model loading. Free CPU resources and temporary storage limit availability. Use persistent storage, cached model weights and monitored capacity for a production service.
+### 1. Hugging Face Spaces backend
+
+1. Create a new **Docker** Space. Use the repository `Devesh831/Industrial-Intelligence-RAG` as the source, or push the repository contents into the Space repository.
+2. Keep the root `Dockerfile` as the build entry point. It installs `backend/requirements.txt`, copies only `Task2` and `backend`, and starts Uvicorn on port `7860`. `.dockerignore` excludes `frontend`, `Task1`, private PDFs, spreadsheets, generated plots and local caches.
+3. Confirm the root README YAML front matter contains `sdk: docker` and `app_port: 7860`. The checked-in `hf-space.yml` is a reference copy; Hugging Face reads the YAML block in `README.md`.
+4. Add the Space variable `FRONTEND_ORIGINS` with the exact Vercel origin you will use later. For the first backend check, `http://localhost:3000` is sufficient, but replace it before making browser requests from production.
+5. Wait for the build to finish and poll `https://YOUR-SPACE-SUBDOMAIN.hf.space/health`. Continue only when the response reports `status: "ready"`, `models_ready: true` and `index_ready: true`. Model download and Chroma indexing can take several minutes on free CPU.
+6. Verify `GET /analytics`. Verify `POST /ask` with JSON such as `{"question":"What does the public demo document say about a draft drop?"}`. A 503 while health is `starting` is expected; a 503 after readiness needs Space logs.
+
+### 2. Vercel frontend
+
+1. Import the same GitHub repository into Vercel.
+2. Set **Root Directory** to `frontend`. Vercel will use `frontend/vercel.json`, `npm install --no-audit --no-fund` and `npm run build`.
+3. Add the Production environment variable `NEXT_PUBLIC_API_BASE_URL=https://YOUR-SPACE-SUBDOMAIN.hf.space`. Redeploy after changing it; the browser needs the value at build time.
+4. Open the Vercel preview first and verify the analytics section loads, the assistant returns citations, and browser requests do not show CORS errors. Then promote the tested deployment.
+5. Replace the `Live app` placeholder near the top of this README only after the Vercel URL and its API calls have been tested. Do not publish a placeholder as if it were live.
+
+If the Space sleeps or rebuilds, allow startup time for model loading. Free CPU resources and temporary storage limit availability. Use persistent storage, cached model weights and monitored capacity for a production service.
 
 `FRONTEND_ORIGINS` is an exact CORS allowlist. The browser-facing API URL is public by design and must not contain credentials. Keep service tokens only in server-side secrets if a future feature needs them. See [backend instructions](backend/README.md) and [RAG instructions](Task2/prototype/README.md).
 

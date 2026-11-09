@@ -1,6 +1,6 @@
 """API contract checks without downloading models or reading private files."""
 from fastapi.testclient import TestClient
-from backend.app import app
+from backend.app import app, ask, Question
 
 
 def test_public_aggregates_and_health():
@@ -17,3 +17,34 @@ def test_query_validation():
     client = TestClient(app)
     assert client.post('/ask', json={'question': ''}).status_code == 422
     assert client.post('/ask', json={'question': 'x' * 301}).status_code == 422
+
+
+def test_health_exposes_readiness_state():
+    client = TestClient(app)
+    app.state.models_ready = False
+    app.state.index_ready = False
+    app.state.startup_error = "TestError"
+    response = client.get('/health')
+    assert response.status_code == 200
+    assert response.json() == {
+        "status": "starting", "demo_only": True,
+        "models_ready": False, "index_ready": False,
+        "startup_error": "TestError",
+    }
+
+
+def test_ask_contract_with_mocked_ready_rag():
+    class FakeEmbedder:
+        def encode(self, *_args, **_kwargs):
+            import numpy as np
+            return np.array([[1.0, 0.0]])
+    class FakeCollection:
+        def count(self): return 1
+        def query(self, **_kwargs):
+            return {"documents": [["A verified demo snippet."]], "metadatas": [[{"file": "demo.pdf", "page": 1}]], "distances": [[0.1]]}
+    app.state.models_ready = True
+    app.state.index_ready = True
+    app.state.rag = (FakeCollection(), FakeEmbedder(), lambda _prompt: "A cited demo answer")
+    response = ask(Question(question="What does the demo say?"))
+    assert response["answer"] == "A cited demo answer"
+    assert response["sources"][0]["page"] == 1
